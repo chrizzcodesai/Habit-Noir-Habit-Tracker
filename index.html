@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050505" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Habit Noir" />
+    <title>Habit Noir</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-live="polite">
+      <header class="topbar">
+        <div>
+          <p class="kicker" id="rangeLabel">June 2026 - January 2028</p>
+          <h1>Habit Noir</h1>
+        </div>
+        <button class="icon-button icon-button--hot" id="addHabit" type="button" aria-label="Add habit" title="Add habit">
+          <span aria-hidden="true">+</span>
+        </button>
+      </header>
+
+      <section class="today-hero" aria-labelledby="todayTitle">
+        <div>
+          <p class="date-line" id="todayLabel"></p>
+          <h2 id="todayTitle">Today</h2>
+        </div>
+        <div class="score-ring" id="scoreRing" aria-label="Daily completion">
+          <span id="scoreNumber">0/8</span>
+        </div>
+      </section>
+
+      <nav class="view-tabs" aria-label="Views">
+        <button class="tab is-active" type="button" data-view="today">Today</button>
+        <button class="tab" type="button" data-view="month">Month</button>
+        <button class="tab" type="button" data-view="stats">Stats</button>
+      </nav>
+
+      <section class="view is-active" id="todayView">
+        <div class="action-rail">
+          <button class="rail-button" id="resetToday" type="button">Clear Day</button>
+          <button class="rail-button" id="openArchive" type="button">Archive</button>
+          <button class="rail-button" id="openReminders" type="button">Reminders</button>
+        </div>
+        <div class="habit-list" id="habitList"></div>
+      </section>
+
+      <section class="view" id="monthView">
+        <div class="month-controls">
+          <button class="icon-button" id="prevMonth" type="button" aria-label="Previous month" title="Previous month">
+            <span aria-hidden="true">‹</span>
+          </button>
+          <div>
+            <p class="kicker">Month</p>
+            <h2 id="monthTitle"></h2>
+          </div>
+          <button class="icon-button" id="nextMonth" type="button" aria-label="Next month" title="Next month">
+            <span aria-hidden="true">›</span>
+          </button>
+        </div>
+        <div class="month-strip" id="monthStrip"></div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </section>
+
+      <section class="view" id="statsView">
+        <div class="stat-head">
+          <p class="kicker">Momentum</p>
+          <h2 id="statsTitle">Current Month</h2>
+        </div>
+        <div class="stats-list" id="statsList"></div>
+      </section>
+    </main>
+
+    <template id="habitTemplate">
+      <div class="habit-row" role="button" tabindex="0">
+        <span class="habit-mark" aria-hidden="true"></span>
+        <span class="habit-main">
+          <span class="habit-section"></span>
+          <span class="habit-name"></span>
+          <span class="habit-meta"></span>
+        </span>
+        <span class="habit-count"></span>
+      </div>
+    </template>
+
+    <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+    <aside class="command-sheet" id="habitSheet" aria-hidden="true" aria-labelledby="sheetTitle">
+      <form id="habitForm" class="sheet-panel">
+        <div class="sheet-grip" aria-hidden="true"></div>
+        <header class="sheet-head">
+          <div>
+            <p class="kicker" id="sheetMode">New ritual</p>
+            <h2 id="sheetTitle">Add Habit</h2>
+          </div>
+          <button class="icon-button" id="closeSheet" type="button" aria-label="Close" title="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+
+        <label class="field">
+          <span>Name</span>
+          <input id="habitName" name="name" autocomplete="off" maxlength="48" required />
+        </label>
+
+        <div class="field">
+          <span>Section</span>
+          <div class="segmented" id="sectionPicker">
+            <label><input type="radio" name="section" value="Morning" checked /> <span>Morning</span></label>
+            <label><input type="radio" name="section" value="Day" /> <span>Day</span></label>
+            <label><input type="radio" name="section" value="Night" /> <span>Night</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <span>Schedule</span>
+          <div class="segmented segmented--wide">
+            <label><input type="radio" name="scheduleMode" value="daily" checked /> <span>Every day</span></label>
+            <label><input type="radio" name="scheduleMode" value="weekdays" /> <span>Weekdays</span></label>
+          </div>
+          <div class="weekday-grid" id="weekdayGrid">
+            <label><input type="checkbox" name="weekday" value="1" checked /> <span>M</span></label>
+            <label><input type="checkbox" name="weekday" value="2" checked /> <span>T</span></label>
+            <label><input type="checkbox" name="weekday" value="3" checked /> <span>W</span></label>
+            <label><input type="checkbox" name="weekday" value="4" checked /> <span>T</span></label>
+            <label><input type="checkbox" name="weekday" value="5" checked /> <span>F</span></label>
+            <label><input type="checkbox" name="weekday" value="6" checked /> <span>S</span></label>
+            <label><input type="checkbox" name="weekday" value="0" checked /> <span>S</span></label>
+          </div>
+        </div>
+
+        <label class="field field-row">
+          <span>Reminder</span>
+          <input id="habitReminder" name="reminder" type="time" />
+        </label>
+
+        <p class="notice" id="notificationNotice"></p>
+
+        <div class="sheet-actions">
+          <button class="primary-button" type="submit">Save Habit</button>
+          <button class="ghost-button" id="archiveHabit" type="button" hidden>Archive</button>
+          <button class="danger-button" id="deleteHabit" type="button" hidden>Delete</button>
+        </div>
+      </form>
+    </aside>
+
+    <aside class="command-sheet" id="archiveSheet" aria-hidden="true" aria-labelledby="archiveTitle">
+      <div class="sheet-panel">
+        <div class="sheet-grip" aria-hidden="true"></div>
+        <header class="sheet-head">
+          <div>
+            <p class="kicker">Stored away</p>
+            <h2 id="archiveTitle">Archive</h2>
+          </div>
+          <button class="icon-button" id="closeArchive" type="button" aria-label="Close archive" title="Close archive">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div class="archive-list" id="archiveList"></div>
+      </div>
+    </aside>
+
+    <aside class="command-sheet" id="reminderSheet" aria-hidden="true" aria-labelledby="reminderTitle">
+      <div class="sheet-panel">
+        <div class="sheet-grip" aria-hidden="true"></div>
+        <header class="sheet-head">
+          <div>
+            <p class="kicker">Local browser</p>
+            <h2 id="reminderTitle">Reminders</h2>
+          </div>
+          <button class="icon-button" id="closeReminders" type="button" aria-label="Close reminders" title="Close reminders">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div class="reminder-card">
+          <p class="reminder-copy" id="reminderCopy"></p>
+          <button class="primary-button" id="enableNotifications" type="button">Enable Notifications</button>
+        </div>
+        <div class="reminder-list" id="reminderList"></div>
+      </div>
+    </aside>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
