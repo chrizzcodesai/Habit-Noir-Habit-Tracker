@@ -74,6 +74,7 @@ const els = {
   reminderCopy: document.querySelector("#reminderCopy"),
   reminderList: document.querySelector("#reminderList"),
   enableNotifications: document.querySelector("#enableNotifications"),
+  testNotification: null,
   exportProgress: document.querySelector("#exportProgress"),
   importProgress: document.querySelector("#importProgress"),
   importFile: document.querySelector("#importFile"),
@@ -467,6 +468,15 @@ function renderReminders() {
   const hasNotifications = "Notification" in window;
   els.enableNotifications.disabled = !hasNotifications || Notification.permission === "granted";
   els.enableNotifications.textContent = hasNotifications && Notification.permission === "granted" ? "Notifications Enabled" : "Enable Notifications";
+  if (!els.testNotification) {
+    els.testNotification = document.createElement("button");
+    els.testNotification.type = "button";
+    els.testNotification.className = "ghost-button";
+    els.testNotification.textContent = "Test Notification";
+    els.testNotification.addEventListener("click", sendTestNotification);
+    els.enableNotifications.insertAdjacentElement("afterend", els.testNotification);
+  }
+  els.testNotification.disabled = !hasNotifications || Notification.permission !== "granted";
   const habits = state.habits.filter((habit) => !habit.archived && habit.reminder);
   els.reminderList.replaceChildren(...(habits.length ? habits.map((habit) => {
     const row = document.createElement("button");
@@ -576,6 +586,21 @@ function requestNotificationPermission() {
   });
 }
 
+async function sendTestNotification() {
+  if (!("Notification" in window)) {
+    window.alert("This browser does not support notifications here.");
+    return;
+  }
+  if (Notification.permission !== "granted") {
+    await requestNotificationPermission();
+    if (Notification.permission !== "granted") return;
+  }
+  new Notification("Habit Noir", {
+    body: "This is a test reminder from your Home Screen app.",
+    icon: "icon.svg",
+  });
+}
+
 function scheduleReminderCheck() {
   window.clearInterval(notificationTimer);
   notificationTimer = window.setInterval(checkReminders, 60000);
@@ -604,7 +629,7 @@ function notificationMessage() {
   if (location.protocol === "file:") return "Reminder settings save locally. Browser notifications may be limited from a local file, especially on iPhone.";
   if (Notification.permission === "granted") return "This tab can notify you while the app is allowed to run.";
   if (Notification.permission === "denied") return "Notifications are blocked for this app in the browser.";
-  return "Enable browser notifications to get reminder nudges when this app is allowed to run.";
+  return "Enable browser notifications to get reminder nudges when this app is allowed to run. Then tap Test Notification to confirm it works.";
 }
 
 function deleteHabit(habitId) {
