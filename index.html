@@ -16,7 +16,6 @@
     <main class="app-shell" aria-live="polite">
       <header class="topbar">
         <div>
-          <p class="kicker" id="rangeLabel">June 2026 - January 2028</p>
           <h1>Habit Noir</h1>
         </div>
         <button class="icon-button icon-button--hot" id="addHabit" type="button" aria-label="Add habit" title="Add habit">
@@ -178,6 +177,17 @@
         <div class="reminder-card">
           <p class="reminder-copy" id="reminderCopy"></p>
           <button class="primary-button" id="enableNotifications" type="button">Enable Notifications</button>
+        </div>
+        <div class="backup-card">
+          <div class="backup-copy">
+            <p class="kicker">Backups</p>
+            <p class="reminder-copy">Export your habits and history to a file, then import it later if you need to restore this app.</p>
+          </div>
+          <div class="backup-actions">
+            <button class="ghost-button" id="exportProgress" type="button">Export Progress</button>
+            <button class="ghost-button" id="importProgress" type="button">Import Backup</button>
+          </div>
+          <input id="importFile" type="file" accept="application/json,.json" hidden />
         </div>
         <div class="reminder-list" id="reminderList"></div>
       </div>

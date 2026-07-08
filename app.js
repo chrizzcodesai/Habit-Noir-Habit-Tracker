@@ -23,6 +23,7 @@ const seedEntries = {
 
 const storageKey = "habit-noir:v2";
 const legacyStorageKey = "habit-noir:v1";
+const backupVersion = 1;
 const rangeStart = new Date("2026-06-01T00:00:00");
 const rangeEnd = new Date("2028-01-31T00:00:00");
 const sectionOrder = ["Morning", "Day", "Night"];
@@ -73,6 +74,9 @@ const els = {
   reminderCopy: document.querySelector("#reminderCopy"),
   reminderList: document.querySelector("#reminderList"),
   enableNotifications: document.querySelector("#enableNotifications"),
+  exportProgress: document.querySelector("#exportProgress"),
+  importProgress: document.querySelector("#importProgress"),
+  importFile: document.querySelector("#importFile"),
 };
 
 renderAll();
@@ -167,6 +171,9 @@ function registerEvents() {
   });
 
   els.enableNotifications.addEventListener("click", requestNotificationPermission);
+  els.exportProgress.addEventListener("click", exportProgress);
+  els.importProgress.addEventListener("click", () => els.importFile.click());
+  els.importFile.addEventListener("change", importProgressFromFile);
 
   els.tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -469,6 +476,72 @@ function renderReminders() {
     row.addEventListener("click", () => openHabitSheet(habit.id));
     return row;
   }) : [emptyState("No reminders set", "Add a time to any habit to make it show up here.")]));
+}
+
+async function exportProgress() {
+  const backup = {
+    app: "Habit Noir",
+    backupVersion,
+    exportedAt: new Date().toISOString(),
+    state,
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const filename = `habit-noir-backup-${iso(new Date())}.json`;
+  const file = new File([json], filename, { type: "application/json" });
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        title: "Habit Noir Backup",
+        text: "Habit Noir progress backup",
+        files: [file],
+      });
+      return;
+    } catch (error) {
+      if (error && error.name === "AbortError") return;
+    }
+  }
+
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function importProgressFromFile(event) {
+  const [file] = event.target.files || [];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const importedState = extractImportedState(payload);
+    if (!importedState) throw new Error("Invalid backup file");
+
+    const ok = window.confirm("Replace the current progress with this backup?");
+    if (!ok) return;
+
+    state = normalizeState(importedState);
+    saveState();
+    closeSheets();
+    scheduleReminderCheck();
+    renderAll();
+  } catch (error) {
+    window.alert("That backup file could not be imported.");
+  } finally {
+    event.target.value = "";
+  }
+}
+
+function extractImportedState(payload) {
+  if (payload?.state?.habits && payload?.state?.entries) return payload.state;
+  if (payload?.habits && payload?.entries) return payload;
+  return null;
 }
 
 function showSheet(sheet) {
