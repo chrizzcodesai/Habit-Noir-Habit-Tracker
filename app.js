@@ -333,12 +333,12 @@ function renderCalendarGrid() {
     grid.className = "day-dots";
     for (let day = 1; day <= daysInMonth(selectedMonth); day += 1) {
       const date = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), day);
+      if (!isScheduled(habit, date)) continue;
       const key = iso(date);
       const cell = document.createElement("button");
       cell.type = "button";
       cell.className = "day-cell";
       cell.textContent = day;
-      cell.disabled = !isScheduled(habit, date);
       cell.classList.toggle("is-done", isDone(key, habit.id));
       cell.classList.toggle("is-today", sameDate(date, today));
       cell.setAttribute("aria-label", `${habit.name}, ${date.toDateString()}`);
